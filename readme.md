@@ -1,0 +1,33 @@
+# Timebridge
+* 此分支用于存放一些测试代码
+* 代码修改自Card分支Game.py、master分支player.py、util.py，对已有代码做了一些重构和测试
+* enums.py
+   * 用于存放一些枚举值，这部分代码来自于master分支player.py
+* card.py
+   * 创建了Card类。在之后程序中，将使用Card类作为牌的底层表示。Card类可以方便的获取color、number属性，而不需要用除法获取（由于Card类继承自int，实际上依然可以用除法获得color）。
+   * 增加一个包含52个元素的元组（一副牌）
+   * 增加一个由color、number创建Card的函数
+* AI.py
+   * 将master分支util.py的Card类进行修改，改名为AI类。因为util.Card实际具有计算该出哪一种牌的功能，我认为这一功能并非手牌类所拥有，因此改名AI类
+   * 修改了util.Card.calculateCardNumber函数
+   * 修改了util.Card.remove函数，修复一个bug
+   * 修改AIPlayer函数返回值，使其返回一个Card对象，而不是number、color组成的元组
+   * AI类用于提示该出的牌
+* player.py
+   * 对master分支的player.py和Card分支的Game.py相关代码进行了重构
+   * 简化findTeammate函数的实现
+   * Player类
+       * 被设计为各种玩家类的基类（类之间的关系与player.py中一致）
+       * 增加成员self.ai，self.ai是AI类的实例，可以提示应该出的牌（但self.ai没有决定权）；self.ai的不共享Player的数据，而是复制了Player的手牌信息，独自维护自己的手牌信息，尽管增加了传递信息的开销，但也降低了AI类与Player类的耦合程度
+       * 增加函数initAI，用于初始化self.ai，向self.ai传递初始手牌信息
+       * 修改loseCard函数，每当玩家出牌后，将出牌结果传递给self.ai，以使其更新它自己的手牌信息
+   * AIPlayer类
+       * 来自于master分支player.py
+       * 忽略了原有的数据成员（在短期内不会被使用），在之后增加新功能时再把这些成员加上
+       * 调整了bid函数返回值，以符合接口设计约定
+       * 修改了play函数
+    * HumanPlayer类
+       * 仅用于测试
+   
+* 其他修改
+   * 所有类都被修改为继承自object
