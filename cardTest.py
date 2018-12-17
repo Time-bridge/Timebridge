@@ -15,8 +15,8 @@ class CardTestCase(unittest.TestCase):
     def testSuit(self):
         for i in range(52):
             card = Card(i)
-            suitIndex = card.color
-            self.assertEqual(Suit(suitIndex), Card(i).suit, '不能正确获取number属性')
+            suit_index = card.color
+            self.assertEqual(Suit(suit_index), Card(i).suit, '不能正确获取number属性')
 
 
 if __name__ == '__main__':

@@ -5,27 +5,24 @@ import random
 
 
 class AIPlayerTestCase(unittest.TestCase):
-    def testPlay(self):
+    def test_play(self):
         players = [AIPlayer(i) for i in range(4)]
         cards = list(fiftyTwoCards)
         random.shuffle(cards)
         for i, card in enumerate(cards):
-            players[i % 4].getCard(card)
+            players[i % 4].get_card(card)
 
         for player in players:
-            player.initAI()
+            player.init_AI()
 
         for i in range(13):
-            firstStartPlayer = random.randint(0, 3)
-            lastPlayedNumber, lastPlayedColor = None, None
-            # playedCards = []
+            first_start_player = random.randint(0, 3)
+            last_played_number, last_played_color = None, None
             for j in range(4):
-                player = players[(j + firstStartPlayer) % 4]
-                card = player.play(lastPlayedNumber, lastPlayedColor, j)
-                lastPlayedNumber = card.number
-                lastPlayedColor = card.color
-                # playedCards.append(card)
-            # winPlayer = playedCards
+                player = players[(j + first_start_player) % 4]
+                card = player.play(last_played_number, last_played_color, j)
+                last_played_number = card.number
+                last_played_color = card.color
         for player in players:
             self.assertEqual(len(player.cards), 0)
 

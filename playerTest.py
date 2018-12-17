@@ -1,62 +1,62 @@
 import unittest
-from player import findTeammate, Player
+from player import find_teammate, Player
 from card import fiftyTwoCards
 from enums import Position
 import random
 
 
-class playerTestCase(unittest.TestCase):
-    def testFindTeammate(self):
-        for myPosition in range(4):
-            if myPosition == Position.North.value:
-                foolResult = Position.South.value
-            elif myPosition == Position.West.value:
-                foolResult = Position.East.value
-            elif myPosition == Position.South.value:
-                foolResult = Position.North.value
-            elif myPosition == Position.East.value:
-                foolResult = Position.West.value
+class PlayerTestCase(unittest.TestCase):
+    def test_find_teammate(self):
+        for my_position in range(4):
+            if my_position == Position.North.value:
+                fool_result = Position.South.value
+            elif my_position == Position.West.value:
+                fool_result = Position.East.value
+            elif my_position == Position.South.value:
+                fool_result = Position.North.value
+            elif my_position == Position.East.value:
+                fool_result = Position.West.value
             else:
-                foolResult = None
-            self.assertEqual(0 <= foolResult < 4, True)
-            self.assertEqual(foolResult, findTeammate(myPosition))
+                fool_result = None
+            self.assertEqual(0 <= fool_result < 4, True)
+            self.assertEqual(fool_result, find_teammate(my_position))
 
-    def _testGetCard(self):
+    def _test_get_card(self):
         random.shuffle(self.cardHeap)
         for i, card in enumerate(self.cardHeap):
-            playerIndex = i % 4
-            self.players[playerIndex].getCard(card)
-            self.testCardLists[playerIndex].append(card)
-            self.testCardLists[playerIndex].sort()
-            self.assertEqual(self.testCardLists[playerIndex],
-                             self.players[playerIndex].cards, 'getCard failed')
+            player_index = i % 4
+            self.players[player_index].get_card(card)
+            self.test_card_lists[player_index].append(card)
+            self.test_card_lists[player_index].sort()
+            self.assertEqual(self.test_card_lists[player_index],
+                             self.players[player_index].cards, 'getCard failed')
         for player in self.players:
             self.assertEqual(len(player.cards), 13)
 
-    def _testLoseCard(self):
+    def _test_lose_card(self):
         # testLostCardLists = [], [], [], []
-        playerIndices = list(range(4))
+        player_indices = list(range(4))
         for _ in range(13):
             # 13轮
-            random.shuffle(playerIndices)
+            random.shuffle(player_indices)
             for playerIndex in range(4):
                 # 以随机的顺序出牌
-                card = random.choice(self.testCardLists[playerIndex])
-                self.testCardLists[playerIndex].remove(card)
-                self.players[playerIndex].loseCard(card)
-                self.assertEqual(self.players[playerIndex].cards, self.testCardLists[playerIndex], 'loseCard failed')
+                card = random.choice(self.test_card_lists[playerIndex])
+                self.test_card_lists[playerIndex].remove(card)
+                self.players[playerIndex].lose_card(card)
+                self.assertEqual(self.players[playerIndex].cards, self.test_card_lists[playerIndex], 'loseCard failed')
 
-    def testGetAndLose(self):
+    def test_get_and_lose(self):
         self.players = [Player(position) for position in range(4)]
         self.cardHeap = list(fiftyTwoCards)
-        self.testCardLists = [], [], [], []
+        self.test_card_lists = [], [], [], []
 
-        self._testGetCard()
+        self._test_get_card()
 
         for player in self.players:
-            player.initAI()
+            player.init_AI()
 
-        self._testLoseCard()
+        self._test_lose_card()
 
 
 if __name__ == '__main__':
