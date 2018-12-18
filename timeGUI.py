@@ -7,173 +7,85 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from enums import State, DateInfo
 from controller import Controller
+import os
 
 
-App = QApplication(sys.argv)
-
-
-#######################################
-class Poker(object):
-    # 一次加载全部图片，并保存在字典中
-    card_pictures = {i: QPixmap('cards/' + str(i) + '.png') for i in range(53)}
-
-    def __init__(self, window, number):
-        self.number = number
-        self.L = QLabel(window)
-        # self.card = QPixmap('cards/'+str(self.number)+'.png')
-        self.L.setPixmap(Poker.card_pictures[number])
-        self.L.resize(57, 87)
-        self.L.setVisible(True)
-        self.x = 0
-        self.y = 0
-
-    def cardMove(self, x, y):
-        self.x = x
-        self.y = y
-        self.L.move(self.x, self.y)
-
-    def cardMoveY(y):
-        self.y = self.y + y
-        self.L.move(self.x, self.y)
-
-    def delete(self):
-        self.L.deleteLater()
-
-
-class Player(object):
-    def __init__(self):
-        self.cardlist = []   # 牌的图像
-        self.numberlist = []  # 牌的数据表示
-        self.bpx = 0    # 手牌位置
-        self.bpy = 0
-        self.px = 0     # 刚出的牌的位置
-        self.py = 0
-        self.interval = 20  # 间隔
-        self.position = None
-        self.delcard = None # 刚出的牌，出牌后需要将对应的牌删除
-        self.playcardnumber = 0
-
-    def initialize(self, window, numberlist, beginpointx, beginpointy, playpointx, playpointy, position):
-        # print('begin initial')
-        self.numberlist = numberlist
-        self.bpx = beginpointx
-        self.bpy = beginpointy
-        self.px = playpointx
-        self.py = playpointy
-        self.interval = 20 # 间隔
-        self.position = position
-        self.delete()
-        for card in self.cardlist:
-            card.delete()
-        self.cardlist.clear()
-        self.delcard = None
-        for i in range(0, len(self.numberlist)):
-            self.cardlist.append(Poker(window, self.numberlist[i]))
-
-    def move(self):#把牌移动到显示区域
-        for i in range(0, len(self.cardlist)):
-            self.cardlist[i].cardMove(self.bpx + self.interval * i, self.bpy)
-
-    # def play(self, number): #出牌，返回值为当前出牌的编号，number是牌在cardlist中的序号
-    #     # play函数存在的原因在于GUI虽然不用管牌的数据信息，但要维护图像信息
-    #     # 在出牌后，要移除这张牌的图像
-    #     self.cardlist[number].cardMove(self.px, self.py)
-    #     self.delcard = self.cardlist.pop(number)
-    #     self.move_()
-    #     return self.numberlist.pop(number)
-    def play(self, card):
+class Poker(QLabel):
+    """
+    扑克，继承自QLabel，是牌的图形显示
+    """
+    def __init__(self, parent, number, visible=False, *args, **kwargs):
         """
-        出牌
-        :param card: 所出的牌
+        :param parent: 父窗口
+        :param number: 牌,0~52，52表示牌的背面
+        :param visible: 是否可见
+        :param args: 传递给QLabel的位置参数
+        :param kwargs: 传递给QLabel的关键字参数
+        """
+        super().__init__(parent, *args, **kwargs)
+        self.setPixmap(QPixmap('cards' + os.path.sep + str(number) + '.png'))
+        self.resize(57, 87)
+        self.setVisible(visible)
+        self.x, self.y = 0, 0
+
+
+class QPlayer(object):
+    """
+    玩家类，记录玩家手牌应当显示的位置
+    """
+    def __init__(self, position, beginpointx, beginpointy, playpointx,
+                 playpointy):
+        self.hand_pokers = []  # 手牌
+        self.played_poker = None  # 刚出的牌
+        self.bpx = beginpointx  # 手牌位置
+        self.bpy = beginpointy
+        self.px = playpointx  # 刚出的牌的位置
+        self.py = playpointy
+        self.interval = 20  # 间隔
+        self.position = position
+
+    def update(self, hand_pokers, played_poker):
+        """
+        更新手牌及打出的牌的显示
+        :param hand_pokers: 手牌，Poker组成的list
+        :param played_poker: 刚出的牌，Poker
         :return: None
         """
-        p = self.numberlist.index(card) #先找到该牌的序号
-        self.delcard = self.cardlist.pop(p) # 从手牌删除
-        self.delcard.cardMove(self.px, self.py) # 移动至出牌区
-        self.numberlist.pop(p)
+        self.clear()
+        self.hand_pokers = hand_pokers
+        self.played_poker = played_poker
         self.move()
-        return card
 
-    def delete(self):
-        if self.delcard is not None:
-            self.delcard.delete() #将已经打出的牌删除，避免重叠
-            self.delcard = None
+    def clear(self):
+        """将所有牌移除（设为不可见）"""
+        for poker in self.hand_pokers:
+            poker.setVisible(False)
+        self.hand_pokers.clear()
+        if self.played_poker:
+            self.played_poker.setVisible(False)
+            self.played_poker = None
 
+    def move_horizontal(self):
+        """使手牌沿水平方向摆放"""
+        for i, poker in enumerate(self.hand_pokers):
+            poker.move(self.bpx + self.interval * i, self.bpy)
+            poker.setVisible(True)
 
-class AIplayer(object):
-    def __init__(self):
-        self.cardlist = []#记录玩家要展示的所有牌
-        self.numberlist = []#记录玩家所拥有的所有牌的编号
-        self.bpx = 0
-        self.bpy = 0
-        self.px = 0
-        self.py = 0
-        # self.interval = 20
-        self.delcard = None #出牌后需要将对应的牌删除
-        # self.playcardnumber = 0
-        self.facecards = 0 #此变量记录是否要明牌
-        self.AInumber = 0  # AI编号，与位置相同
-
-    def initialize(self, window, numberlist, beginpointx, beginpointy, playpointx, playpointy, AInumber):
-        self.numberlist = numberlist
-        self.bpx = beginpointx
-        self.bpy = beginpointy
-        self.px = playpointx
-        self.py = playpointy
-        self.interval = 20
-        self.AInumber = AInumber
-        self.delete()
-        for card in self.cardlist:
-            card.delete()
-        self.cardlist.clear()
-        self.delcard = None
-        for i in range(0, len(self.numberlist)):#AI的牌首先都只对玩家展示背面
-            self.cardlist.append(Poker(window, 52))
-        # print('initial over')
-
-    def moveHorizontal(self):  # 把牌移动到显示区域, 水平摆放
-        # print('moveHorizontal')
-        for i in range(0, len(self.cardlist)):
-            self.cardlist[i].cardMove(self.bpx + self.interval * i, self.bpy)
-
-    def moveVertical(self):#把牌移动到显示区域，竖直摆放
-        # print('moveVertical')
-        for i in range(0, len(self.cardlist)):
-            self.cardlist[i].cardMove(self.bpx,
-                                      self.bpy + (self.interval + 15) * i)
+    def move_vertical(self):
+        """使手牌沿竖直方向摆放"""
+        for i, poker in enumerate(self.hand_pokers):
+            poker.move(self.bpx, self.bpy + (self.interval + 15) * i)
+            poker.setVisible(True)
 
     def move(self):
-        if self.AInumber == 1 or self.AInumber == 3:
-            self.moveVertical()
+        """将牌摆放到合适的位置"""
+        if self.position == 1 or self.position == 3:
+            self.move_vertical()
         else:
-            self.moveHorizontal()
-
-    def play(self, number): #出牌，返回值为当前出牌的编号，AIplayer的number与player的number不同，为牌的编号
-        p = self.numberlist.index(number)  # 先找到该牌的序号
-        # self.cardlist[p] = poker(window, number)  # 重新赋值为要显示的牌
-        # self.cardlist[p].cardMove(self.px, self.py)#将这张牌移动到出牌区
-        self.delcard = self.cardlist.pop(p)
-        self.delcard.cardMove(self.px, self.py)
-        self.numberlist.pop(p)
-        self.move()
-        return number
-
-    def delete(self):
-        if self.delcard is not None:
-            self.delcard.delete() #将已经打出的牌删除，避免重叠 出牌之前需要先调用此函数
-            self.delcard = None
-
-    def face_cards(self, w): #如果需要明牌，调用此函数
-        for i in range(0, len(self.numberlist)):
-            temp = self.cardlist.pop()
-            temp.delete()
-        for i in range(0, len(self.numberlist)):#将扑克牌全部替换为正常模式
-            self.cardlist.append(Poker(w, self.numberlist[i]))
-
-        if self.AInumber == 1 or self.AInumber == 3:
-            self.moveVertical()
-        elif self.AInumber == 2:
-            self.moveHorizontal()
+            self.move_horizontal()
+        if self.played_poker:
+            self.played_poker.move(self.px, self.py)
+            self.played_poker.setVisible(True)
 
 
 #######################################
@@ -208,8 +120,8 @@ class WelcomePage(QMainWindow):
             event.ignore()
 
 
-class TimeBridgeGUI(QMainWindow):
-    def __init__(self, parent=None):
+class TimeBridgeGUI(QWidget):
+    def __init__(self, parent=None, controller=None):
         super(TimeBridgeGUI, self).__init__(parent)
         #坐标指示器
         grid = QGridLayout()
@@ -245,72 +157,55 @@ class TimeBridgeGUI(QMainWindow):
 
         ##############################################
         #player
-        self.players = [Player(), AIplayer(), AIplayer(), AIplayer()]#界面中玩家采用逆时针的顺序显示
+        # 桥牌游戏可能使用的全部牌的图像形式，包括52张正面向上的牌与52张背面向上的牌
+        self._pokers = [Poker(self, i) for i in range(52)] + \
+                       [Poker(self, 52) for _ in range(52)]
+
+        points = [(240, 612, 371.5, 520), (739, 100, 643, 306.5),
+                  (240, 4, 371.5, 93), (4, 100, 100, 306.5)] # 玩家手牌放置位置
+        self.players = [QPlayer(i, *(points[i])) for i in range(4)]  # 界面中玩家采用逆时针的顺序显示
         ###################################################
 
         self.resize(800, 700)
         self.setFixedSize(800, 700)
         #self.setStyleSheet("background: black")
 
-        ############################################
-        # 具体菜单项设置可修改
-        # TODO: 添加菜单项
-        self.bar = self.menuBar()
-
-        self.item = self.bar.addMenu('选项')
-        self.new_game = QAction(self, text='新游戏')
-        self.item.addAction(self.new_game)
-        ######################################
-
-        self.controller = Controller()
+        self.controller = Controller() if controller is None else controller
         self.connect_with_controller()
 
     def connect_with_controller(self):
+        """将controller内的view_update_signal连接至两个更新函数"""
         # 信号的连接
-        self.controller.deal_end_signal.connect(self.initializePlayer)
-        # self.controller.biding_signal.connect(self.update)
-        self.controller.bid_signal.connect(self.update)
-        self.controller.bid_end_signal.connect(self.update)
-        self.controller.play_begin_signal.connect(self.delete)
-        self.controller.play_signal.connect(self.play)
+        self.controller.view_update_signal.connect(self.update_players)
+        self.controller.view_update_signal.connect(self.update)
+        self.controller.output_signal.connect(self.pmLabel.setText)
 
-        # 菜单项的连接
-        self.new_game.triggered.connect(self.controller.new_game)
+    def get_poker(self, card):
+        """
+        根据数字形式的牌，找到对应的图像形式的牌
+        :param card: 牌, Card类型
+        :return:
+        """
+        # 注意参数和返回值都可能是None
+        if card is None:
+            return None
+        return self._pokers[card]
 
-    def delete(self):
-        # 删除刚刚打出的牌
-        for player in self.players:
-            player.delete()
+    def update_players(self):
+        """
+        更新玩家手牌的显示
+        :return:
+        """
+        for i, player in enumerate(self.players):
+            hand_cards, played_card, is_visible = self.controller.get_player_info(i)
+            played_poker = self.get_poker(played_card)
+            if is_visible:
+                hand_pokers = [self.get_poker(card) for card in hand_cards]
+            else:
+                hand_pokers = [self.get_poker(52 + 13 * i + j) for j in
+                               range(len(hand_cards))]
+            player.update(hand_pokers, played_poker)
 
-    def initializePlayer(self, numberlists):
-        # print(numberlists)
-        points = [(240, 612, 371.5, 520), (739, 100, 643, 306.5),
-                  (240, 4, 371.5, 93), (4, 100, 100, 306.5)]
-
-        for i, numberlist in enumerate(numberlists):
-            self.players[i].initialize(self, numberlist, *(points[i]), i)
-            self.players[i].move()
-
-        self.AIplayer1facecard()
-        self.AIplayer2facecard()
-        self.AIplayer3facecard()
-        # print('getPlayer over')
-        return
-
-    def play(self, playerPosition, card):
-        self.players[playerPosition].play(card)
-
-    def faceCard(self, i):
-        self.players[i].face_cards(self)
-
-    def AIplayer1facecard(self):#AI玩家1翻牌
-        self.players[1].face_cards(self)
-
-    def AIplayer2facecard(self):#AI玩家2翻牌
-        self.players[2].face_cards(self)
-
-    def AIplayer3facecard(self):#AI玩家3翻牌
-        self.players[3].face_cards(self)
     ##################################################################################
 
     def mousePressEvent(self, e):
@@ -339,26 +234,25 @@ class TimeBridgeGUI(QMainWindow):
         else:
             return
 
-        if len(player.cardlist) > 0 and (player.bpx <= e.x() <= player.bpx + (len(player.cardlist) - 1) * player.interval + 57):
+        if len(player.hand_pokers) > 0 and (player.bpx <= e.x() <= player.bpx + (len(player.hand_pokers) - 1) * player.interval + 57):
             # 计算选中牌的下标
             clicklength = e.x() - player.bpx
-            if clicklength <= player.interval * len(player.cardlist):
+            if clicklength <= player.interval * len(player.hand_pokers):
                 card_index = clicklength // player.interval
             else:
-                card_index = len(player.cardlist) - 1
+                card_index = len(player.hand_pokers) - 1
 
             # print(card_index)
             self.controller.send(card_index, info)
 
     def paintEvent(self, e):
-        print('paintEvent')
+        # print('paintEvent')
         qp = QPainter()
         qp.begin(self)
         self.draw_player_area(qp)
 
-        # if self.controller.state in (State.Play, State.PlayEnd):
-        print(self.controller.state)
-        if self.controller.state == State.Play:
+        # print(self.controller.state)
+        if self.controller.state in (State.Play, State.End):
             self.draw_play_area(qp)
             self.draw_play_text(qp)
             # print('play draw')
@@ -369,13 +263,11 @@ class TimeBridgeGUI(QMainWindow):
         #     self.label1.deleteLater()
         #     self.label3.deleteLater()
         #     self.label2.deleteLater()
-        # elif self.controller.state in (State.BidBegin, State.Biding):
         elif self.controller.state == State.Biding:
             self.draw_bid_update(qp)
             self.draw_bid_area(qp)
             self.draw_bid_text(qp)
-            print('biding draw')
-        print('draw end')
+        # print('draw end')
         qp.end()
         return
 
@@ -398,8 +290,7 @@ class TimeBridgeGUI(QMainWindow):
         pen = QPen(Qt.black, 1, Qt.SolidLine)
         qp.setPen(pen)
 
-        # 横线之间间隔48
-        # 竖线之间间隔80
+        # 横线之间间隔48, 竖线之间间隔80
         delta_x, delta_y = 80, 48
         # 画横线
         for i in range(0, 8):
@@ -417,12 +308,17 @@ class TimeBridgeGUI(QMainWindow):
                 text = '{0} {1}'.format(y, colorList[x])
                 qp.drawText(223 + 80 * x, 162 + 48 * y, text)
         #左上角提示区更新
-        cp = self.controller._model.current_player_position
+        cp = self.controller.current_player_position
         if cp is None:
             return
-        self.pmText = '轮到{0}叫牌'.format(cp)
-        self.pmLabel.setText(self.pmText)
-        #time.sleep(1)
+
+        # 下面的代码我注释掉了，
+        # 在界面显示轮到谁出牌、叫牌是由Controller决定
+        # controller有一个信号output_signal，被连接到pmLabel的setText函数
+        # pmLabel打算给Controller输出信息用，当然GUI如果有某些信息也可以用它输出，
+        # 但轮到谁叫牌、轮到谁出牌，还是由Controller决定
+        # self.pmText = '轮到{0}叫牌'.format(cp)
+        # self.pmLabel.setText(self.pmText)
         #玩家叫牌提示信息更新
 
         text = self.controller.get_bid_result(cp)
@@ -493,29 +389,55 @@ class TimeBridgeGUI(QMainWindow):
         qp.drawText(232, 495, '总胜场')
         qp.drawText(237, 515, '总分')
 
-    def handle_click(self):
-        if not self.isVisible():
-            self.show()
 
-    def handle_close(self):
-        self.close()
+class MainWindow(QMainWindow):
+    close_event = pyqtSignal()
+
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle('时光桥牌')
+        self.setWindowIcon(QIcon('time.png'))
+        self.controller = Controller()
+        widget = TimeBridgeGUI(self, controller=self.controller)
+        self.setCentralWidget(widget)
+        # self.show()
+
+        # 菜单项
+        # TODO: 添加其他的菜单项
+        self.bar = self.menuBar()
+
+        self.item = self.bar.addMenu('选项')
+        self.new_game = QAction(self, text='新游戏')
+        self.item.addAction(self.new_game)
+
+        self.connect_with_controller()
+
+    def connect_with_controller(self):
+        """
+        将菜单项与controller中的槽函数连接起来
+        :return:
+        """
+        self.new_game.triggered.connect(self.controller.new_game)
 
     def closeEvent(self, event):
-        reply = QMessageBox.question(self, 'Message',
-            "是否确认退出?", QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-
+        #是否确认退出
+        reply = QMessageBox.question(self, 'Message', "是否确认退出?",
+                                     QMessageBox.Yes | QMessageBox.No,
+                                     QMessageBox.No)
         if reply == QMessageBox.Yes:
             event.accept()
         else:
             event.ignore()
 
 
-# if __name__ == "__main__":
-ex = WelcomePage()
-s = TimeBridgeGUI()
-ex.btn.clicked.connect(s.handle_click)
-ex.btn.clicked.connect(s.controller.new_game)
-ex.btn.clicked.connect(ex.hide)
-ex.close_signal.connect(ex.close)
-ex.show()
-sys.exit(App.exec_())
+if __name__ == "__main__":
+    App = QApplication(sys.argv)
+    main = MainWindow()
+    # main.show()
+    ex = WelcomePage()
+    ex.btn.clicked.connect(main.show)
+    ex.btn.clicked.connect(main.controller.new_game)
+    ex.btn.clicked.connect(ex.hide)
+    ex.close_signal.connect(ex.close)
+    ex.show()
+    sys.exit(App.exec_())

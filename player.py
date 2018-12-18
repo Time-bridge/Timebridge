@@ -14,8 +14,11 @@ def find_teammate(my_position):
 
 class Player(object):
     class CardIterator(Iterable):
-        def __init__(self, list):
-            self._list = list
+        """
+        用于访问玩家手牌的只读接口
+        """
+        def __init__(self, player):
+            self._list = player.cards
 
         def __iter__(self):
             return self._list.__iter__()
@@ -35,7 +38,8 @@ class Player(object):
         self.position = position  # 自己的位置
         self.teammate_position = find_teammate(position)  # 队友位置
         self.ai = AI()  # 每个玩家都有一个AI。AI只给出出牌建议，并不能决定出哪张牌
-        self.cards_iterator = self.CardIterator(self.cards)  # 访问手牌cards的接口
+        # self.player_info = self.PlayerInfo(self)  # 供GUI访问的接口
+        self.cards_iter = Player.CardIterator(self)
 
     def get_card(self, card):
         self.cards.append(card)

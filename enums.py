@@ -32,17 +32,10 @@ class Position(Enum):
 @unique
 class State(Enum):
     """游戏状态"""
-    # Stop = 0
-    # Deal = 1
-    # BidBegin = 2
-    # Biding = 3
-    # BidEnd = 4
-    # PlayBegin = 5
-    # Play = 6
-    # PlayEnd = 7
     Stop = 'Stop'
     Biding = 'Biding'
     Play = 'Play'
+    End = 'End'
 
 
 @unique

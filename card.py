@@ -28,4 +28,3 @@ def create_card(color, number):
 
 # 一副牌，设定成元组是不希望被修改
 fifty_two_cards = tuple([Card(i) for i in range(52)])
-

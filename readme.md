@@ -1,33 +1,15 @@
-# Timebridge
-* 此分支用于存放一些测试代码
-* 代码修改自Card分支Game.py、master分支player.py、util.py，对已有代码做了一些重构和测试
-* enums.py
-   * 用于存放一些枚举值，这部分代码来自于master分支player.py
-* card.py
-   * 创建了Card类。在之后程序中，将使用Card类作为牌的底层表示。Card类可以方便的获取color、number属性，而不需要用除法获取（由于Card类继承自int，实际上依然可以用除法获得color）。
-   * 增加一个包含52个元素的元组（一副牌）
-   * 增加一个由color、number创建Card的函数
-* AI.py
-   * 将master分支util.py的Card类进行修改，改名为AI类。因为util.Card实际具有计算该出哪一种牌的功能，我认为这一功能并非手牌类所拥有，因此改名AI类
-   * 修改了util.Card.calculateCardNumber函数
-   * 修改了util.Card.remove函数，修复一个bug
-   * 修改AIPlayer函数返回值，使其返回一个Card对象，而不是number、color组成的元组
-   * AI类用于提示该出的牌
-* player.py
-   * 对master分支的player.py和Card分支的Game.py相关代码进行了重构
-   * 简化findTeammate函数的实现
-   * Player类
-       * 被设计为各种玩家类的基类（类之间的关系与player.py中一致）
-       * 增加成员self.ai，self.ai是AI类的实例，可以提示应该出的牌（但self.ai没有决定权）；self.ai的不共享Player的数据，而是复制了Player的手牌信息，独自维护自己的手牌信息，尽管增加了传递信息的开销，但也降低了AI类与Player类的耦合程度
-       * 增加函数initAI，用于初始化self.ai，向self.ai传递初始手牌信息
-       * 修改loseCard函数，每当玩家出牌后，将出牌结果传递给self.ai，以使其更新它自己的手牌信息
-   * AIPlayer类
-       * 来自于master分支player.py
-       * 忽略了原有的数据成员（在短期内不会被使用），在之后增加新功能时再把这些成员加上
-       * 调整了bid函数返回值，以符合接口设计约定
-       * 修改了play函数
-    * HumanPlayer类
-       * 仅用于测试
-   
-* 其他修改
-   * 所有类都被修改为继承自object
+- 修改总目标：去除GUI内存储的牌的数据，使得GUI只负责显示，不负责存储、修改数据
+- Poker
+  - 对Poker实现进行简化，改为继承自QLabel，默认不可见
+  - 移除一张牌不再调用deleteLater，而是设为不可见。其实在TimeBridgeGUI中，一次性创建了所有可能用上的Poker，之后循环利用。
+- QPlayer（原Player，取这个名是为了让人联想起Qt，意识到它和UI有关，你们也可以改为其他合适的名字）
+  - 移除其存储的牌的数据
+  - 移除initialize函数（因为不再需要用此函数传递牌的数据），其他变量初始化在构造函数中进行
+  - 新增update，此函数接收手牌（hand_pokers）和刚打出的牌（played_poker）为参数，played_poker是Poker类型，而hand_pokers是Poker组成的list。此函数将Poker放置在合适的位置（依据自身存储的）。每次调用时，将原先存储的Poker设为不可见，将接收到的参数存储，把它们放到合适的地方，并使它们可见。
+- TimeBridgeGUI
+  - 新增成员_pokers，包含52张正面向上的牌，52张背面向上的牌（Poker类型）。这些牌会循环利用。
+  - 增加update_players函数，它通过调用controller提供的接口controller.get_player_info(i)，返回一个元组（关于玩家手牌信息，有3个元素，分别是手牌、刚打出的牌、手牌是否可见）
+  - 于是，更新界面的方式变为，Controller觉得界面需要更新时，发出view_update_signal，此信号连接到两个函数，update（导致叫牌区、出牌表更新）、update_players（导致玩家的牌更新）
+  - 来自Controller的信号减少，只有更新界面信号view_update_signal和输出信息信号output_signal(此信号会传递一个字符串，用这个字符串设置某个Qlabel上的文字完成输出)
+- MainWindow
+  - 增加此类是为了使用菜单项
