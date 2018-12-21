@@ -1,0 +1,15 @@
+- 修改总目标：去除GUI内存储的牌的数据，使得GUI只负责显示，不负责存储、修改数据
+- Poker
+  - 对Poker实现进行简化，改为继承自QLabel，默认不可见
+  - 移除一张牌不再调用deleteLater，而是设为不可见。其实在TimeBridgeGUI中，一次性创建了所有可能用上的Poker，之后循环利用。
+- QPlayer（原Player，取这个名是为了让人联想起Qt，意识到它和UI有关，你们也可以改为其他合适的名字）
+  - 移除其存储的牌的数据
+  - 移除initialize函数（因为不再需要用此函数传递牌的数据），其他变量初始化在构造函数中进行
+  - 新增update，此函数接收手牌（hand_pokers）和刚打出的牌（played_poker）为参数，played_poker是Poker类型，而hand_pokers是Poker组成的list。此函数将Poker放置在合适的位置（依据自身存储的）。每次调用时，将原先存储的Poker设为不可见，将接收到的参数存储，把它们放到合适的地方，并使它们可见。
+- TimeBridgeGUI
+  - 新增成员_pokers，包含52张正面向上的牌，52张背面向上的牌（Poker类型）。这些牌会循环利用。
+  - 增加update_players函数，它通过调用controller提供的接口controller.get_player_info(i)，返回一个元组（关于玩家手牌信息，有3个元素，分别是手牌、刚打出的牌、手牌是否可见）
+  - 于是，更新界面的方式变为，Controller觉得界面需要更新时，发出view_update_signal，此信号连接到两个函数，update（导致叫牌区、出牌表更新）、update_players（导致玩家的牌更新）
+  - 来自Controller的信号减少，只有更新界面信号view_update_signal和输出信息信号output_signal(此信号会传递一个字符串，用这个字符串设置某个Qlabel上的文字完成输出)
+- MainWindow
+  - 增加此类是为了使用菜单项

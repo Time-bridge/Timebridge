@@ -1,2 +1,2 @@
 # Timebridge
-A software to create an excellent environment for new players of Bridge,
+此分支用于存放一些测试代码
