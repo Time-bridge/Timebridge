@@ -108,6 +108,11 @@ class WelcomePage(QMainWindow):
         self.btn.move(250, 400)
         self.show()
 
+    def paintEvent(self, event):
+        qp = QPainter(self)
+        pixmap = QPixmap("welcome_page.png")
+        qp.drawPixmap(self.rect(), pixmap)
+
     def closeEvent(self, event):
         #是否确认退出
         reply = QMessageBox.question(self, 'Message', "Are you sure to quit?",
@@ -273,6 +278,8 @@ class TimeBridgeGUI(QWidget):
         return
 
     def draw_player_area(self, qp):
+        pixmap = QPixmap("background.jpg")
+        qp.drawPixmap(self.rect(), pixmap)
         col = QColor(0, 0, 0)
         col.setNamedColor('#d4d4d4')
         qp.setPen(col)
