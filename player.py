@@ -2,8 +2,9 @@
 # -*- coding: utf-8 -*-
 
 from enums import Color
+from utils import ReadOnlyIterable, PASS, BidResult
+# from collections import namedtuple
 from AI import AI
-from collections import Iterable
 
 
 # 找队友，player初始化用
@@ -12,22 +13,33 @@ def find_teammate(my_position):
     return (my_position + 2) % 4
 
 
+# BidResult = namedtuple('BidResult', ['number', 'color'])
+# PASS = BidResult(0, None)
+# MAX_BID_RESULT = BidResult(7, 4)
+#
+#
+# def bid_greater(b1, b2):
+#     return b1.number > b2.number or (
+#         b1.number == b2.number and
+#         b1.number != 0 and b1.color > b2.color)
+
+
 class Player(object):
-    class CardIterator(Iterable):
-        """
-        用于访问玩家手牌的只读接口
-        """
-        def __init__(self, player):
-            self._list = player.cards
-
-        def __iter__(self):
-            return self._list.__iter__()
-
-        def __len__(self):
-            return self._list.__len__()
-
-        def __getitem__(self, item):
-            return self._list.__getitem__(item)
+    # class CardIterator(Iterable):
+    #     """
+    #     用于访问玩家手牌的只读接口
+    #     """
+    #     def __init__(self, player):
+    #         self.__cards = player.cards
+    #
+    #     def __iter__(self):
+    #         return self.__cards.__iter__()
+    #
+    #     def __len__(self):
+    #         return self.__cards.__len__()
+    #
+    #     def __getitem__(self, item):
+    #         return self.__cards.__getitem__(item)
 
     def __init__(self, position):
         super().__init__()
@@ -38,8 +50,8 @@ class Player(object):
         self.position = position  # 自己的位置
         self.teammate_position = find_teammate(position)  # 队友位置
         self.ai = AI()  # 每个玩家都有一个AI。AI只给出出牌建议，并不能决定出哪张牌
-        # self.player_info = self.PlayerInfo(self)  # 供GUI访问的接口
-        self.cards_iter = Player.CardIterator(self)
+        # self.cards_iter = Player.CardIterator(self)  # 供UI访问的手牌的只读接口
+        self.cards_iter = ReadOnlyIterable(self.cards)  # 供UI访问的手牌的只读接口
 
     def get_card(self, card):
         self.cards.append(card)
@@ -79,7 +91,10 @@ class Player(object):
         self.color_num = [0, 0, 0, 0]  # 各花色手牌数量
         self.card_num = 0  # 手牌总数
         self.drink_tea = False  # 是否喝茶
-        # self.ai.reset()
+
+    def get_candidates(self, first_played_color):
+        return dict(filter(lambda x: (x[-1].color == first_played_color) or (
+            first_played_color is None), enumerate(self.cards)))
 
 
 class AIPlayer(Player):
@@ -105,15 +120,19 @@ class AIPlayer(Player):
         if self.strategy == 0:
             # 如果是对家叫的牌，则不跟他抢, 0表示pass
             if last_bid_player_position is None:
-                return 0
+                # return BidResult(0, color=None)
+                PASS
             if last_bid_player_position == self.teammate_position:
-                return 0
+                # return BidResult(0, color=None)
+                PASS
             else:
                 for name, color in Color.__members__.items():
                     number = self.bid_number(color.value)
                     if number > last_bid_number:
-                        return int(number * 10 + color.value)
-        return 0
+                        # return int(number * 10 + color.value)
+                        return BidResult(number, color.value)
+        # return BidResult(0, color=None)
+        return PASS
 
     # 出牌
     def play(self, last_played_number, last_played_color, order, first_played_color):

@@ -129,7 +129,7 @@ class TimeBridgeGUI(QWidget):
         y = 0
         grid.setHorizontalSpacing(1)
         grid.setVerticalSpacing(1)
-        grid.setContentsMargins(10, 10, 700, 600)
+        grid.setContentsMargins(10, 10, 600, 600)
         self.cText = "x: {0},  y: {1}".format(x, y)
         self.pmText = "提示信息"
         #self.setMouseTracking(True)
@@ -161,8 +161,8 @@ class TimeBridgeGUI(QWidget):
         self._pokers = [Poker(self, i) for i in range(52)] + \
                        [Poker(self, 52) for _ in range(52)]
 
-        points = [(240, 612, 371.5, 520), (739, 100, 643, 306.5),
-                  (240, 4, 371.5, 93), (4, 100, 100, 306.5)] # 玩家手牌放置位置
+        points = [(240, 612, 371.5, 520), (4, 100, 100, 306.5),
+                  (240, 4, 371.5, 93), (739, 100, 643, 306.5)]  # 玩家手牌放置位置
         self.players = [QPlayer(i, *(points[i])) for i in range(4)]  # 界面中玩家采用逆时针的顺序显示
         ###################################################
 
@@ -219,7 +219,8 @@ class TimeBridgeGUI(QWidget):
             text = "x: {0},  y: {1}".format(x, y)
             self.cLabel.setText(text)
             if 0 <= x < 5 and 0 <= y < 7:
-                bid_result = 10 * (y + 1) + x
+                # bid_result = 10 * (y + 1) + x
+                bid_result = y + 1, x
                 self.controller.send(bid_result, DateInfo.Bid)
 
         # 手牌区
@@ -255,6 +256,7 @@ class TimeBridgeGUI(QWidget):
         if self.controller.state in (State.Play, State.End):
             self.draw_play_area(qp)
             self.draw_play_text(qp)
+            self.draw_play_table(qp)
             # print('play draw')
         # elif self.controller.state == State.BidEnd:
         #     #目前存在Bug
@@ -338,8 +340,12 @@ class TimeBridgeGUI(QWidget):
     def draw_bid_update(self, qp):
         if not self.controller.max_bid:
             return
-        xb = self.controller.max_bid % 10
-        yb = self.controller.max_bid // 10 - 1
+        # xb = self.controller.max_bid % 10
+        # yb = self.controller.max_bid // 10 - 1
+        yb = self.controller.max_bid[0] - 1
+        if yb < 0:
+            return
+        xb = self.controller.max_bid[1]
         if self.controller.win_bid_position is None:
             return
         #叫牌表更新
@@ -352,6 +358,24 @@ class TimeBridgeGUI(QWidget):
                     qp.drawRect(*self.bid_map(x, y))
                 else:
                     return
+
+    def draw_play_table(self, qp):
+        """更新出牌表"""
+        play_table = self.controller.play_table
+        rank = [2, 3, 0, 1, 'win']
+        player_name = ['S', 'E', 'N', 'W']
+        color_list = ['♣', '♦', '♥', '♠']
+        poker_list = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q',
+                      'K', 'A']
+        for y in range(1, len(play_table) + 1):
+            for x in range(1, 5):
+                card_number = play_table[y - 1][rank[x - 1]]
+                index = card_number // 13
+                number = card_number % 13
+                qp.drawText(50 * x + 230, 20 * y + 215,
+                            color_list[index] + poker_list[number])
+            qp.drawText(480, 20 * y + 215,
+                        player_name[play_table[y - 1][rank[4]]])
 
     def draw_play_area(self, qp):
         qp.setBrush(QColor(180, 180, 180))
@@ -378,12 +402,12 @@ class TimeBridgeGUI(QWidget):
         player_list = ['N', 'W', 'S', 'E']
         color_list = ['♣', '♦', '♥', '♠', 'NT']
         if self.controller.win_bid_position is not None:
-            contract = '契约:{0}由{1}叫出'.format(str(self.controller.max_bid // 10) + color_list[self.controller.max_bid % 10], player_list[self.controller.win_bid_position])
+            contract = '契约:{0}由{1}叫出'.format(str(self.controller.max_bid[0]) + color_list[self.controller.max_bid[1]], player_list[self.controller.win_bid_position])
         qp.drawText(355, 193, contract)
         text_list = ['轮次', 'N出牌', 'W出牌', 'S出牌', 'E出牌', '获胜方']
         for x in range(0, 6):
             qp.drawText(50 * x + 230, 215, text_list[x])
-        for y in range(1, 13):
+        for y in range(1, 14):
             qp.drawText(246.5, 20 * y + 215, str(y))
             qp.drawText(535, 20 * y + 215, '回溯')
         qp.drawText(232, 495, '总胜场')

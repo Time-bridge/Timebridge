@@ -1,16 +1,19 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
+from utils import ReadOnlyIterable
+
 
 class PlayTable(object):
     def __init__(self):
-        self.history = []
+        self.__history = []
+        self.history = ReadOnlyIterable(self.__history)
 
-    def add(self, pie):
+    def add(self, trick):
         """
-        :param pie: 字典，包含一轮出牌信息；包含5个键0,1,2,3,'win'，值分别4个玩家的出牌以及本轮胜者
+        :param trick: 字典，包含一轮出牌信息；包含5个键0,1,2,3,'win'，值分别4个玩家的出牌以及本轮胜者
         :return:
         """
-        self.history.append(pie)
+        self.__history.append(trick)
 
     def reset(self):
-        self.history.clear()
+        self.__history.clear()

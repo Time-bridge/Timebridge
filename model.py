@@ -19,7 +19,7 @@ class Model(object):
         self.bid_table = BidTable()  # 叫牌表
         self.win_bid_position = None  # 叫牌获胜的玩家
         self.pass_num = 0  # pass数量
-        self.last_bid_number = None
+        self.last_bid_number = 0
         self.last_bid_color = None
         self.last_bid_player_position = None
 
@@ -53,7 +53,7 @@ class Model(object):
         self.bid_table.reset()
         self.win_bid_position = None
         self.pass_num = 0
-        self.last_bid_number = None
+        self.last_bid_number = 0
         self.last_bid_color = None
         self.last_bid_player_position = None
 
