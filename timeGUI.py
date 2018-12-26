@@ -104,14 +104,52 @@ class WelcomePage(QMainWindow):
 
         self.btn = QToolButton(self)
         self.btn.setText("开始游戏")
-        self.btn.resize(100, 60)
+        self.btn.resize(100, 30)
         self.btn.move(250, 400)
+
+        self.rule = QToolButton(self)
+        self.rule.setText("规则教学")
+        self.rule.resize(100, 30)
+        self.rule.move(250,450)
+        self.rule_text = self.read_text()
+        self.rule.clicked.connect(self.rule_clicked)
+
+        self.about = QToolButton(self)
+        self.about.setText("关于我们")
+        self.about.resize(100, 30)
+        self.about.move(250,500)
+        self.about.clicked.connect(self.about_clicked)
+
         self.show()
+    
+    def read_text(self):
+        filename = 'bridgeRule.txt'
+        pos = []
+        Efield = []
+        with open(filename, 'r') as file_to_read:
+            while True:
+                lines = file_to_read.readline() # 整行读取数据
+                if not lines:
+                    break
+                    pass
+                #p_tmp, E_tmp = [float(i) for i in lines.split()] 
+                #pos.append(p_tmp)  # 添加新读取的数据
+                Efield.append(lines)
+                pass
+            pass
+        return Efield
 
     def paintEvent(self, event):
         qp = QPainter(self)
         pixmap = QPixmap("welcome_page.png")
         qp.drawPixmap(self.rect(), pixmap)
+
+    def rule_clicked(self):
+        result = ScrollMessageBox(self.rule_text, None)
+        result.exec_()
+
+    def about_clicked(self):
+        about = QMessageBox.information(self, 'About',"https://github.com/Time-bridge/Timebridge",QMessageBox.Yes ,QMessageBox.Yes)
 
     def closeEvent(self, event):
         #是否确认退出
@@ -124,6 +162,18 @@ class WelcomePage(QMainWindow):
         else:
             event.ignore()
 
+class ScrollMessageBox(QMessageBox):
+   def __init__(self, l, *args, **kwargs):
+      QMessageBox.__init__(self, *args, **kwargs)
+      scroll = QScrollArea(self)
+      scroll.setWidgetResizable(True)
+      self.content = QWidget()
+      scroll.setWidget(self.content)
+      lay = QVBoxLayout(self.content)
+      for item in l:
+         lay.addWidget(QLabel(item, self))
+      self.layout().addWidget(scroll, 0, 0, 1, self.layout().columnCount())
+      self.setStyleSheet("QScrollArea{min-width:610 px; min-height: 400px}")
 
 class TimeBridgeGUI(QWidget):
     def __init__(self, parent=None, controller=None):
@@ -167,7 +217,7 @@ class TimeBridgeGUI(QWidget):
                        [Poker(self, 52) for _ in range(52)]
 
         points = [(240, 612, 371.5, 520), (4, 100, 100, 306.5),
-                  (240, 4, 371.5, 93),  (739, 100, 643, 306.5)] # 玩家手牌放置位置
+                  (240, 4, 371.5, 93), (739, 100, 643, 306.5)]  # 玩家手牌放置位置
         self.players = [QPlayer(i, *(points[i])) for i in range(4)]  # 界面中玩家采用逆时针的顺序显示
         ###################################################
 
@@ -224,7 +274,8 @@ class TimeBridgeGUI(QWidget):
             text = "x: {0},  y: {1}".format(x, y)
             self.cLabel.setText(text)
             if 0 <= x < 5 and 0 <= y < 7:
-                bid_result = 10 * (y + 1) + x
+                # bid_result = 10 * (y + 1) + x
+                bid_result = y + 1, x
                 self.controller.send(bid_result, DateInfo.Bid)
 
         # 手牌区
@@ -280,17 +331,6 @@ class TimeBridgeGUI(QWidget):
     def draw_player_area(self, qp):
         pixmap = QPixmap("background.jpg")
         qp.drawPixmap(self.rect(), pixmap)
-        col = QColor(0, 0, 0)
-        col.setNamedColor('#d4d4d4')
-        qp.setPen(col)
-        #基础区域
-        qp.setBrush(QColor(180, 180, 180))
-        qp.drawRect(240, 4, 297, 87)
-        qp.drawRect(240, 609, 297, 87)
-        qp.drawRect(4, 100, 57, 507)
-        qp.drawRect(739, 100, 57, 507)
-
-        # qp.drawRect(200, 180, 400, 336)
 
 
     def draw_bid_area(self, qp):
@@ -346,8 +386,12 @@ class TimeBridgeGUI(QWidget):
     def draw_bid_update(self, qp):
         if not self.controller.max_bid:
             return
-        xb = self.controller.max_bid % 10
-        yb = self.controller.max_bid // 10 - 1
+        # xb = self.controller.max_bid % 10
+        # yb = self.controller.max_bid // 10 - 1
+        yb = self.controller.max_bid[0] - 1
+        if yb < 0:
+            return
+        xb = self.controller.max_bid[1]
         if self.controller.win_bid_position is None:
             return
         #叫牌表更新
@@ -361,20 +405,23 @@ class TimeBridgeGUI(QWidget):
                 else:
                     return
 
-    def draw_play_table(self,qp):
-        ''' 更新出牌表 '''
+    def draw_play_table(self, qp):
+        """更新出牌表"""
         play_table = self.controller.play_table
-        rank = [2,3,0,1,'win']
-        player_name = ['S','E','N','W']
+        rank = [2, 3, 0, 1, 'win']
+        player_name = ['S', 'E', 'N', 'W']
         color_list = ['♣', '♦', '♥', '♠']
-        poker_list = ['2','3','4','5','6','7','8','9','10','J','Q','K','A']
-        for y in range(1,len(play_table)):
-            for x in range(1,5):
-                card_number = play_table[y-1][rank[x-1]]
-                index = card_number//13
-                number = card_number%13
-                qp.drawText(50 * x + 230, 20 * y + 215, color_list[index]+poker_list[number])
-            qp.drawText(480, 20 * y + 215, player_name[play_table[y-1][rank[4]]] )
+        poker_list = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q',
+                      'K', 'A']
+        for y in range(1, len(play_table) + 1):
+            for x in range(1, 5):
+                card_number = play_table[y - 1][rank[x - 1]]
+                index = card_number // 13
+                number = card_number % 13
+                qp.drawText(50 * x + 230, 20 * y + 215,
+                            color_list[index] + poker_list[number])
+            qp.drawText(480, 20 * y + 215,
+                        player_name[play_table[y - 1][rank[4]]])
 
     def draw_play_area(self, qp):
         qp.setBrush(QColor(180, 180, 180))
@@ -401,12 +448,12 @@ class TimeBridgeGUI(QWidget):
         player_list = ['N', 'W', 'S', 'E']
         color_list = ['♣', '♦', '♥', '♠', 'NT']
         if self.controller.win_bid_position is not None:
-            contract = '契约:{0}由{1}叫出'.format(str(self.controller.max_bid // 10) + color_list[self.controller.max_bid % 10], player_list[self.controller.win_bid_position])
+            contract = '契约:{0}由{1}叫出'.format(str(self.controller.max_bid[0]) + color_list[self.controller.max_bid[1]], player_list[self.controller.win_bid_position])
         qp.drawText(355, 193, contract)
         text_list = ['轮次', 'N出牌', 'W出牌', 'S出牌', 'E出牌', '获胜方']
         for x in range(0, 6):
             qp.drawText(50 * x + 230, 215, text_list[x])
-        for y in range(1, 13):
+        for y in range(1, 14):
             qp.drawText(246.5, 20 * y + 215, str(y))
             qp.drawText(535, 20 * y + 215, '回溯')
         qp.drawText(232, 495, '总胜场')
