@@ -1,69 +1,38 @@
-import numpy as np
+from collections import Iterable, namedtuple
 
-#手牌类
-class Card:
-    def __init__(self):
-        self.color = np.array(13, dtype=np.int)
-        self.number = np.zeros(13, dtype=np.int)
-        self.isPlayed = np.array(13, dtype=np.int)
-        self.cardNumber = np.zeros(5)
 
-    #初始化手牌对象
-    def init(self, color, number):
-        self.color = color
-        self.number = number
-        self.isPlayed = np.zeros(13, dtype=np.int)
-        self.calculateCardNumber()
+class ReadOnlyIterable(Iterable):
+    """
+    用于访问列表、字典、元组等的只读接口，
+    可进行迭代、计算长度
+    """
 
-    #计算不同花色牌点数
-    def calculateCardNumber(self):
-        for i in range(13):
-            if self.number[i] == 1:
-                self.cardNumber[self.color[i]] +=14
-            else:
-                self.cardNumber[self.color[i]] += self.number[i]
+    def __init__(self, iterable):
+        self.iterable = iterable
 
-    #某花色手牌数
-    def colorCardNumber(self, color):
-        return self.cardNumber[color]
+    def __iter__(self):
+        return self.iterable.__iter__()
 
-    #顺序出牌法
-    def AIPlay(self, lastPlayedNumber, lastplayedColor, order):
-        if order == 1:
-            for i in range(13):
-                if self.isPlayed[i] == 0:
-                    self.isPlayed[i] == 1
-                    return self.number[i], self.color[i]
+    def __len__(self):
+        return self.iterable.__len__()
 
-        for i in range(13):
-            if (self.color[i] == lastplayedColor) and ( self.isPlayed[i] == 0 ):
-                self.isPlayed[i] == 1
-                return self.number[i], lastplayedColor
+    def __getitem__(self, item):
+        return self.iterable.__getitem__(item)
+        # value = self.iterable.__getitem__(item)
+        # if isinstance(value, Iterable) and not isinstance(value, str) \
+        #         and not isinstance(item, slice) \
+        #         and not isinstance(value, ReadOnlyIterable):
+        #     return ReadOnlyIterable(value)
+        # else:
+        #     return value
 
-        for i in range(13):
-            if self.isPlayed[i] == 0 :
-                self.isPlayed[i] == 1
-                return self.number[i], self.color[i]
 
-    #检验出牌合法性，待补充
-    def checkDisplayPrinciple(self,thisRoundColor, myColor, myNumber):
-        if self.cardNumber[thisRoundColor] == 0: return True
-        if myColor != thisRoundColor: return False
-        return True
+BidResult = namedtuple('BidResult', ['number', 'color'])
+PASS = BidResult(0, None)
+MAX_BID_RESULT = BidResult(7, 4)
 
-    #人类玩家出牌
-    def HunmanPlay(self, thisRoundColor, myColor, myNumber):
-        if self.checkDisplayPrinciple(thisRoundColor, myColor, myNumber):
-            self.remove( myColor, myNumber)
-            return True
-        else:
-            return False
 
-    def remove(self, myColor, myNumber):
-        for i in range(13):
-            if self.color[i] == myColor and self.number == myNumber:
-                self.isPlayed[i] = 0
-
-if __name__ == '__main__':
-
-    a = 1
+def bid_greater(b1, b2):
+    return b1.number > b2.number or (
+        b1.number == b2.number and
+        b1.number != 0 and b1.color > b2.color)

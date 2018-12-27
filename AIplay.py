@@ -86,17 +86,19 @@ class AIplay(object):
         
     def getCardInfo(self,Model):
         if self.TrickPosition is 4:
-            self.ThirdCard = Model.pie_history[(Model.current_player_position+1)%4]
-            self.SecondCard = Model.pie_history[(Model.current_player_position+2)%4]
-            self.FirstCard = Model.pie_history[(Model.current_player_position+3)%4]
+            self.ThirdCard = Model.trick_history[(Model.current_player_position+1)%4]
+            self.SecondCard = Model.trick_history[(Model.current_player_position+2)%4]
+            self.FirstCard = Model.trick_history[(Model.current_player_position+3)%4]
         elif self.TrickPosition is 3:
-            self.SecondCard = Model.pie_history[(Model.current_player_position+1)%4]
-            self.FirstCard = Model.pie_history[(Model.current_player_position+2)%4]
+            self.SecondCard = Model.trick_history[(Model.current_player_position+1)%4]
+            self.FirstCard = Model.trick_history[(Model.current_player_position+2)%4]
         elif self.TrickPosition is 2:
-            self.FirstCard = Model.pie_history[(Model.current_player_position+1)%4]
+            self.FirstCard = Model.trick_history[(Model.current_player_position+1)%4]
+        '''
         if Model.current_player is not None:
             for card in Model.current_player.cards:
                 self.CardsNow[card]=0
+        '''
             
     
     def Position(self,P_P,P_D):
@@ -116,8 +118,8 @@ class AIplay(object):
             self.TrickPosition=1
         else:
             self.TrickPosition=Model.play_order+1 #出牌位置
-        if Model.pie is not None:
-            self.TrickNow=Model.pie #当前是第几轮
+        if Model.trick is not None:
+            self.TrickNow=Model.trick #当前是第几轮
         self.PlayerNow=self.Position(Model.current_player_position,self.DeclarerM) #当前玩家的角色
         self.getColorInfo(Model)
         self.getCardInfo(Model)
@@ -164,8 +166,14 @@ class AIplay(object):
     #获取牌信息的函数
     #主要使用的是 cardsNum,haveCard,haveCardOut 
     def KnowElsePlayers(self,player,color):
-        for p in Players: #若有一人牌打完了，且大家都知道，且不是明手，那么就知道剩余一人的牌
-            if self.CardNumTable[p][color] < 0 and p is not self.PlayerNow and p is not Dummy:
+        #若有一人牌打完了，且大家都知道，且不是明手，那么就知道剩余一人的牌
+        if self.PlayerNow is not Dummy:
+            for p in Players:
+                if p is not self.PlayerNow and p is not Dummy and p is not player:
+                    if self.CardNumTable[p][color] < 0:      
+                        return True
+        else:
+            if self.CardNumTable[OL][color] < 0 or self.CardNumTable[OLMate][color]<0:
                 return True
         return False
     
@@ -182,7 +190,7 @@ class AIplay(object):
             return 0
         return n
     
-    def cardsNum(self,player,color):
+    def cardsNumO(self,player,color):  #O表示一次计算，One time
         """
         return 某玩家player某种花色color的牌的数量
                 >=0的返回值表示结果，-1表示不知道
@@ -196,11 +204,45 @@ class AIplay(object):
         if self.CardNumTable[player][color]<0: #如果是出完了 大家也知道
             return 0
         if self.KnowElsePlayers(player,color): #知道其余三人的情况,那也能推知剩余一人的情况
-            return self.CardsNumG(player,color)
+            return self.cardsNumG(player,color)
         if self.OutColorNum(player,color)>=3:  #如果其他三门都出完了，大家也知道
             return self.cardsNumG(player,color)
         return -1 #表示不知道
-
+    def cardsNum(self,player,color): #多次计算
+        t =[]
+        for i in range(4):
+            tj=[]
+            for j in range(4):
+                tj.append(0)
+            t.append(tj)
+        uk = 0
+        for p in Players:
+            for c in Colors:
+                t[p][c]=self.cardsNumO(p,c)
+                if t[p][c] is -1:
+                    uk += 1
+        ukc = 0 #列未知的个数
+        uka = 0 #行未知的个数
+        for i in range(uk): #最多重复uk次，因为至少获取一个新知识，或者没有，没有则无法再有
+            for p in Players: #逐行检查
+                for c in Colors:
+                    if t[p][c] is -1:
+                        uka += 1
+                        cuk = c
+                if uka is 1: #只有一个不知道，那根据总的衡算，也应该能推知
+                    t[p][cuk]=self.cardsNumG(p,cuk) #由于不知道，肯定是大于等于0
+                uka = 0
+            for c in Colors:
+                for p in Players:
+                    if t[p][c] is -1:
+                        ukc += 1
+                        puk = p
+                if ukc is 1:
+                    t[puk][c]=self.cardsNumG(puk,c)
+                ukc = 0
+        return t[player][color]
+            
+    
     def haveCardG(self,player,card):#上帝视角God
         if self.CardTable[card].Player is player:
             return True
@@ -213,18 +255,37 @@ class AIplay(object):
         """
         if player is self.PlayerNow: #自己的牌自己知道
             return self.haveCardG(player,card)
-        if player is Dummy: #Dummy的牌都知道
+        elif player is Dummy: #Dummy的牌都知道
             return self.haveCardG(player,card)
+        elif self.CardTable[card].Player is Dummy:
+            print("***",end='')
+            return 0
+        elif self.CardTable[card].Player is self.PlayerNow:
+            #如果这张牌在已知的人的手里，则返回无
+            print("---",end='')
+            return 0
         if player is NullPlayer:
+            return 0
+        if self.CardTable[card].Player is OutHand:
             return 0
         if self.PlayerNow is Dummy and player is Declarer: #Dummy知道Declarer的牌
             return self.haveCardG(player,card)
         if self.CardNumTable[player][card.color]<0: #如果是出完了 大家也知道
-            return False
+            return 0
         if self.KnowElsePlayers(player,card.color): #知道其余三人的情况,那也能推知剩余一人的情况
             return self.haveCardG(player,card)
+        if self.PlayerNow is not Dummy:
+            for p in Players:
+                if p is not self.PlayerNow and p is not Dummy and self.cardsNum(p,card.color) is 0:
+                     return self.haveCardG(player,card)
+        if self.PlayerNow is Dummy:
+            if self.cardsNum(OL,card.color) is 0 or self.cardsNum(OLMate,card.color) is 0:
+                     return self.haveCardG(player,card)
+        
+        '''
         if self.OutColorNum(player,card.color)>=3: #知道本人其余门的情况，能推知该门的情况
-            return self.haveCardG(player,card)
+            return self.haveCardG(player,card) #知道本人其余门的情况，不能推断出本门的具体情况
+        '''
         return -1
     
     def haveCardOut(self,card):
@@ -235,13 +296,17 @@ class AIplay(object):
 
     def AvailableCards_1(self): #首先判断可出的牌，在CardsNow中赋值为1
         ccn = 0 #本轮可以出的牌数
+        self.CardsNow ={}
+        for c in Cards:
+            if self.CardTable[c].Player is self.PlayerNow:
+                self.CardsNow[c]=0
         if self.TrickPosition > 1: #被动出牌玩家
-            for card in list[self.CardsNow.keys()]:#遍历所有的牌
-                if card.color is self.TrickLeadingColor:
+            for card in list(self.CardsNow.keys()):#遍历所有的牌
+                if Card(card).color is self.TrickLeadingColor:
                     self.CardsNow[card] += 1
                     ccn += 1
         if ccn is 0: #包含两种情况，1.是首引玩家 2.是被动玩家，但没有同花色
-            for card in list[self.CardsNow.keys()]:
+            for card in list(self.CardsNow.keys()):
                 self.CardsNow[card]+=1 #所有的牌都加1
                 
       #添加其他规则！让你的AI更智能！
