@@ -104,9 +104,52 @@ class WelcomePage(QMainWindow):
 
         self.btn = QToolButton(self)
         self.btn.setText("开始游戏")
-        self.btn.resize(100, 60)
+        self.btn.resize(100, 30)
         self.btn.move(250, 400)
+
+        self.rule = QToolButton(self)
+        self.rule.setText("规则教学")
+        self.rule.resize(100, 30)
+        self.rule.move(250,450)
+        self.rule_text = self.read_text()
+        self.rule.clicked.connect(self.rule_clicked)
+
+        self.about = QToolButton(self)
+        self.about.setText("关于我们")
+        self.about.resize(100, 30)
+        self.about.move(250,500)
+        self.about.clicked.connect(self.about_clicked)
+
         self.show()
+    
+    def read_text(self):
+        filename = 'bridgeRule.txt'
+        pos = []
+        Efield = []
+        with open(filename, 'r') as file_to_read:
+            while True:
+                lines = file_to_read.readline() # 整行读取数据
+                if not lines:
+                    break
+                    pass
+                #p_tmp, E_tmp = [float(i) for i in lines.split()] 
+                #pos.append(p_tmp)  # 添加新读取的数据
+                Efield.append(lines)
+                pass
+            pass
+        return Efield
+
+    def paintEvent(self, event):
+        qp = QPainter(self)
+        pixmap = QPixmap("welcome_page.png")
+        qp.drawPixmap(self.rect(), pixmap)
+
+    def rule_clicked(self):
+        result = ScrollMessageBox(self.rule_text, None)
+        result.exec_()
+
+    def about_clicked(self):
+        about = QMessageBox.information(self, 'About',"https://github.com/Time-bridge/Timebridge",QMessageBox.Yes ,QMessageBox.Yes)
 
     def closeEvent(self, event):
         #是否确认退出
@@ -119,6 +162,18 @@ class WelcomePage(QMainWindow):
         else:
             event.ignore()
 
+class ScrollMessageBox(QMessageBox):
+   def __init__(self, l, *args, **kwargs):
+      QMessageBox.__init__(self, *args, **kwargs)
+      scroll = QScrollArea(self)
+      scroll.setWidgetResizable(True)
+      self.content = QWidget()
+      scroll.setWidget(self.content)
+      lay = QVBoxLayout(self.content)
+      for item in l:
+         lay.addWidget(QLabel(item, self))
+      self.layout().addWidget(scroll, 0, 0, 1, self.layout().columnCount())
+      self.setStyleSheet("QScrollArea{min-width:610 px; min-height: 400px}")
 
 class TimeBridgeGUI(QWidget):
     def __init__(self, parent=None, controller=None):
@@ -274,17 +329,8 @@ class TimeBridgeGUI(QWidget):
         return
 
     def draw_player_area(self, qp):
-        col = QColor(0, 0, 0)
-        col.setNamedColor('#d4d4d4')
-        qp.setPen(col)
-        #基础区域
-        qp.setBrush(QColor(180, 180, 180))
-        qp.drawRect(240, 4, 297, 87)
-        qp.drawRect(240, 609, 297, 87)
-        qp.drawRect(4, 100, 57, 507)
-        qp.drawRect(739, 100, 57, 507)
-
-        # qp.drawRect(200, 180, 400, 336)
+        pixmap = QPixmap("background.jpg")
+        qp.drawPixmap(self.rect(), pixmap)
 
 
     def draw_bid_area(self, qp):
@@ -362,7 +408,7 @@ class TimeBridgeGUI(QWidget):
     def draw_play_table(self, qp):
         """更新出牌表"""
         play_table = self.controller.play_table
-        rank = [2, 3, 0, 1, 'win']
+        rank = [0, 1, 2, 3, 'win']
         player_name = ['S', 'E', 'N', 'W']
         color_list = ['♣', '♦', '♥', '♠']
         poker_list = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q',

@@ -15,28 +15,6 @@ from functools import partial
 import time
 
 
-# def wrapper(fun):
-#     """装饰器，仅用于帮助分析函数调用时所在线程及运行时间，在最终版中应移去"""
-#     def inner(*args, **kwargs):
-#         t1 = time.time()
-#         res = fun(*args, **kwargs)
-#         t2 = time.time()
-#         print(threading.current_thread().name, fun.__name__, 'take %s seconds' % (t2 - t1))
-#         return res
-#     return inner
-
-def wrapper_factory(before=lambda: None, after=lambda: None):
-    def wrapper(fun):
-        def inner(*args, **kwargs):
-            before()
-            res = fun(*args, **kwargs)
-            after()
-            return res
-
-        return inner
-    return wrapper
-
-
 class GameAction(object):
     """游戏事件，并非指图形界面的鼠标点击之类的事件，而是后台线程中的事件。
     例如，游戏中，游戏进入新的阶段产生的事件；重新开始游戏的事件等。
@@ -95,10 +73,8 @@ class Controller(QObject):
     # 存在这样的可能，View读取一半旧的数据-->Controller修改了数据-->View读取一半新数据。
     # 归根结底，这种情况出现的原因是，View读取数据、更新界面与Controller修改数据的顺序是不确定的（线程调度顺序不确定），
     # 存在交替进行的可能（在python中，由于全局变量锁的存在，不会出现同时进行的情况）。
-    # 因而上述情况可能性很小，但并非绝对不可能（而且如果此软件使用其他具有真·多线程的语言改写，这种情况出现的可能性很大）。
-    # 一种解决方法是，在Controller中，加上线程暂停一段时间的功能，给View层足够时间完成数据读写和界面更新，
-    # 使得在大多数情况下，不会出现这个问题。
-    # 但是，如果要万无一失，最好保证View读取数据、更新界面具有原子性，即在读取数据、更新界面期间，Controller无法修改数据，
+    # 因而上述情况可能性很小（尤其是目前Controller会暂停一段时间），但并非绝对不可能（而且如果此软件使用其他具有真·多线程的语言改写，这种情况出现的可能性很大）。
+    # 如果要万无一失，最好保证View读取数据、更新界面具有原子性，即在读取数据、更新界面期间，Controller无法修改数据，
     # 但如果加锁，就会不可避免的增加Controller层与View层的耦合。
 
     # __init__函数之前的，都是为UI提供的接口
@@ -134,7 +110,10 @@ class Controller(QObject):
                 self.__model.current_player.controlled_by_human and \
                 (data is not None):
             # 来自GUI叫牌区的用户点击（叫牌结果）
-            data = BidResult(*data)
+            try:
+                data = BidResult(*data)
+            except (Exception, TypeError, ValueError):
+                return
             if self.check_bid_valid(data):
                 self.__received_data = data
             else:
