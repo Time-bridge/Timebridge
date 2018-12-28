@@ -1,26 +1,22 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
-
-import numpy as np
 from card import create_card
 
 
 class AI(object):
     def __init__(self):
         super().__init__()
-        self.color = np.array(13, dtype=np.int)
-        self.number = np.zeros(13, dtype=np.int)
-        self.isPlayed = np.array(13, dtype=np.int)
-        self.cardPoint = np.zeros(5)
-        self.colorNumber = np.zeros(4)
+        self.isPlayed = [False] * 13
+        self.cardPoint = [0] * 5
+        self.colorNumber = [0] * 4
 
     # 重置AI
     def reset(self, color, number):
         self.color = color
         self.number = number
-        self.isPlayed = np.zeros(13, dtype=np.int)
-        self.colorNumber = np.zeros(4)
-        self.cardPoint = np.zeros(5)
+        self.isPlayed = [False] * 13
+        self.cardPoint = [0] * 5
+        self.colorNumber = [0] * 4
         self.calculate_card_point()
 
     # 计算不同花色牌点数
@@ -35,24 +31,25 @@ class AI(object):
 
     # 顺序出牌法，给出AI推荐出的牌
     def ai_play(self, lastPlayedNumber, lastplayedColor, order, firstPlayedColor):
-        if order == 0:
+        # if order == 0:
+        if firstPlayedColor is None:
             for i in range(13):
-                if self.isPlayed[i] == 0:
-                    self.isPlayed[i] = 1
+                if not self.isPlayed[i]:
+                    # self.isPlayed[i] = True
                     return create_card(self.color[i], self.number[i])
 
         for i in range(13):
-            if (self.color[i] == firstPlayedColor) and (self.isPlayed[i] == 0):
-                self.isPlayed[i] = 1
+            if (self.color[i] == firstPlayedColor) and (not self.isPlayed[i]):
+                # self.isPlayed[i] = True
                 return create_card(firstPlayedColor, self.number[i])
 
         for i in range(13):
-            if self.isPlayed[i] == 0:
-                self.isPlayed[i] = 1
+            if not self.isPlayed[i]:
+                # self.isPlayed[i] = True
                 return create_card(self.color[i], self.number[i])
 
     # 出牌
     def remove(self, myColor, myNumber):
         for i in range(13):
             if (self.color[i] == myColor) and (self.number[i] == myNumber):
-                self.isPlayed[i] = 1
+                self.isPlayed[i] = True

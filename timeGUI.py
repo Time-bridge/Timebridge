@@ -12,15 +12,15 @@ import os
 
 class Poker(QLabel):
     """
-    ÆË¿Ë£¬¼Ì³Ğ×ÔQLabel£¬ÊÇÅÆµÄÍ¼ĞÎÏÔÊ¾
+    æ‰‘å…‹ï¼Œç»§æ‰¿è‡ªQLabelï¼Œæ˜¯ç‰Œçš„å›¾å½¢æ˜¾ç¤º
     """
     def __init__(self, parent, number, visible=False, *args, **kwargs):
         """
-        :param parent: ¸¸´°¿Ú
-        :param number: ÅÆ,0~52£¬52±íÊ¾ÅÆµÄ±³Ãæ
-        :param visible: ÊÇ·ñ¿É¼û
-        :param args: ´«µİ¸øQLabelµÄÎ»ÖÃ²ÎÊı
-        :param kwargs: ´«µİ¸øQLabelµÄ¹Ø¼ü×Ö²ÎÊı
+        :param parent: çˆ¶çª—å£
+        :param number: ç‰Œ,0~52ï¼Œ52è¡¨ç¤ºç‰Œçš„èƒŒé¢
+        :param visible: æ˜¯å¦å¯è§
+        :param args: ä¼ é€’ç»™QLabelçš„ä½ç½®å‚æ•°
+        :param kwargs: ä¼ é€’ç»™QLabelçš„å…³é”®å­—å‚æ•°
         """
         super().__init__(parent, *args, **kwargs)
         self.setPixmap(QPixmap('cards' + os.path.sep + str(number) + '.png'))
@@ -31,24 +31,24 @@ class Poker(QLabel):
 
 class QPlayer(object):
     """
-    Íæ¼ÒÀà£¬¼ÇÂ¼Íæ¼ÒÊÖÅÆÓ¦µ±ÏÔÊ¾µÄÎ»ÖÃ
+    ç©å®¶ç±»ï¼Œè®°å½•ç©å®¶æ‰‹ç‰Œåº”å½“æ˜¾ç¤ºçš„ä½ç½®
     """
     def __init__(self, position, beginpointx, beginpointy, playpointx,
                  playpointy):
-        self.hand_pokers = []  # ÊÖÅÆ
-        self.played_poker = None  # ¸Õ³öµÄÅÆ
-        self.bpx = beginpointx  # ÊÖÅÆÎ»ÖÃ
+        self.hand_pokers = []  # æ‰‹ç‰Œ
+        self.played_poker = None  # åˆšå‡ºçš„ç‰Œ
+        self.bpx = beginpointx  # æ‰‹ç‰Œä½ç½®
         self.bpy = beginpointy
-        self.px = playpointx  # ¸Õ³öµÄÅÆµÄÎ»ÖÃ
+        self.px = playpointx  # åˆšå‡ºçš„ç‰Œçš„ä½ç½®
         self.py = playpointy
-        self.interval = 20  # ¼ä¸ô
+        self.interval = 20  # é—´éš”
         self.position = position
 
     def update(self, hand_pokers, played_poker):
         """
-        ¸üĞÂÊÖÅÆ¼°´ò³öµÄÅÆµÄÏÔÊ¾
-        :param hand_pokers: ÊÖÅÆ£¬Poker×é³ÉµÄlist
-        :param played_poker: ¸Õ³öµÄÅÆ£¬Poker
+        æ›´æ–°æ‰‹ç‰ŒåŠæ‰“å‡ºçš„ç‰Œçš„æ˜¾ç¤º
+        :param hand_pokers: æ‰‹ç‰Œï¼ŒPokerç»„æˆçš„list
+        :param played_poker: åˆšå‡ºçš„ç‰Œï¼ŒPoker
         :return: None
         """
         self.clear()
@@ -57,7 +57,7 @@ class QPlayer(object):
         self.move()
 
     def clear(self):
-        """½«ËùÓĞÅÆÒÆ³ı£¨ÉèÎª²»¿É¼û£©"""
+        """å°†æ‰€æœ‰ç‰Œç§»é™¤ï¼ˆè®¾ä¸ºä¸å¯è§ï¼‰"""
         for poker in self.hand_pokers:
             poker.setVisible(False)
         self.hand_pokers.clear()
@@ -66,19 +66,19 @@ class QPlayer(object):
             self.played_poker = None
 
     def move_horizontal(self):
-        """Ê¹ÊÖÅÆÑØË®Æ½·½Ïò°Ú·Å"""
+        """ä½¿æ‰‹ç‰Œæ²¿æ°´å¹³æ–¹å‘æ‘†æ”¾"""
         for i, poker in enumerate(self.hand_pokers):
             poker.move(self.bpx + self.interval * i, self.bpy)
             poker.setVisible(True)
 
     def move_vertical(self):
-        """Ê¹ÊÖÅÆÑØÊúÖ±·½Ïò°Ú·Å"""
+        """ä½¿æ‰‹ç‰Œæ²¿ç«–ç›´æ–¹å‘æ‘†æ”¾"""
         for i, poker in enumerate(self.hand_pokers):
             poker.move(self.bpx, self.bpy + (self.interval + 15) * i)
             poker.setVisible(True)
 
     def move(self):
-        """½«ÅÆ°Ú·Åµ½ºÏÊÊµÄÎ»ÖÃ"""
+        """å°†ç‰Œæ‘†æ”¾åˆ°åˆé€‚çš„ä½ç½®"""
         if self.position == 1 or self.position == 3:
             self.move_vertical()
         else:
@@ -97,25 +97,25 @@ class WelcomePage(QMainWindow):
         self.initUI()
 
     def initUI(self):
-        self.setWindowTitle('Ê±¹âÇÅÅÆ')
-        # ÉèÖÃ´°¿ÚµÄÍ¼±ê£¬ÒıÓÃµ±Ç°Ä¿Â¼ÏÂµÄtime.pngÍ¼Æ¬
+        self.setWindowTitle('æ—¶å…‰æ¡¥ç‰Œ')
+        # è®¾ç½®çª—å£çš„å›¾æ ‡ï¼Œå¼•ç”¨å½“å‰ç›®å½•ä¸‹çš„time.pngå›¾ç‰‡
         self.setWindowIcon(QIcon('time.png'))
         self.setGeometry(300, 300, 600, 600)
 
         self.btn = QToolButton(self)
-        self.btn.setText("¿ªÊ¼ÓÎÏ·")
+        self.btn.setText("å¼€å§‹æ¸¸æˆ")
         self.btn.resize(100, 30)
         self.btn.move(250, 400)
 
         self.rule = QToolButton(self)
-        self.rule.setText("¹æÔò½ÌÑ§")
+        self.rule.setText("è§„åˆ™æ•™å­¦")
         self.rule.resize(100, 30)
         self.rule.move(250,450)
         self.rule_text = self.read_text()
         self.rule.clicked.connect(self.rule_clicked)
 
         self.about = QToolButton(self)
-        self.about.setText("¹ØÓÚÎÒÃÇ")
+        self.about.setText("å…³äºæˆ‘ä»¬")
         self.about.resize(100, 30)
         self.about.move(250,500)
         self.about.clicked.connect(self.about_clicked)
@@ -128,12 +128,12 @@ class WelcomePage(QMainWindow):
         Efield = []
         with open(filename, 'r') as file_to_read:
             while True:
-                lines = file_to_read.readline() # ÕûĞĞ¶ÁÈ¡Êı¾İ
+                lines = file_to_read.readline() # æ•´è¡Œè¯»å–æ•°æ®
                 if not lines:
                     break
                     pass
                 #p_tmp, E_tmp = [float(i) for i in lines.split()] 
-                #pos.append(p_tmp)  # Ìí¼ÓĞÂ¶ÁÈ¡µÄÊı¾İ
+                #pos.append(p_tmp)  # æ·»åŠ æ–°è¯»å–çš„æ•°æ®
                 Efield.append(lines)
                 pass
             pass
@@ -152,7 +152,7 @@ class WelcomePage(QMainWindow):
         about = QMessageBox.information(self, 'About',"https://github.com/Time-bridge/Timebridge",QMessageBox.Yes ,QMessageBox.Yes)
 
     def closeEvent(self, event):
-        #ÊÇ·ñÈ·ÈÏÍË³ö
+        #æ˜¯å¦ç¡®è®¤é€€å‡º
         reply = QMessageBox.question(self, 'Message', "Are you sure to quit?",
                                      QMessageBox.Yes | QMessageBox.No,
                                      QMessageBox.No)
@@ -178,7 +178,7 @@ class ScrollMessageBox(QMessageBox):
 class TimeBridgeGUI(QWidget):
     def __init__(self, parent=None, controller=None):
         super(TimeBridgeGUI, self).__init__(parent)
-        #×ø±êÖ¸Ê¾Æ÷
+        #åæ ‡æŒ‡ç¤ºå™¨
         grid = QGridLayout()
         x = 1
         y = 0
@@ -186,7 +186,7 @@ class TimeBridgeGUI(QWidget):
         grid.setVerticalSpacing(1)
         grid.setContentsMargins(10, 10, 600, 600)
         self.cText = "x: {0},  y: {1}".format(x, y)
-        self.pmText = "ÌáÊ¾ĞÅÏ¢"
+        self.pmText = "æç¤ºä¿¡æ¯"
         #self.setMouseTracking(True)
         self.cLabel = QLabel(self.cText, self)
         self.pmLabel = QLabel(self.pmText, self)
@@ -212,13 +212,13 @@ class TimeBridgeGUI(QWidget):
 
         ##############################################
         #player
-        # ÇÅÅÆÓÎÏ·¿ÉÄÜÊ¹ÓÃµÄÈ«²¿ÅÆµÄÍ¼ÏñĞÎÊ½£¬°üÀ¨52ÕÅÕıÃæÏòÉÏµÄÅÆÓë52ÕÅ±³ÃæÏòÉÏµÄÅÆ
+        # æ¡¥ç‰Œæ¸¸æˆå¯èƒ½ä½¿ç”¨çš„å…¨éƒ¨ç‰Œçš„å›¾åƒå½¢å¼ï¼ŒåŒ…æ‹¬52å¼ æ­£é¢å‘ä¸Šçš„ç‰Œä¸52å¼ èƒŒé¢å‘ä¸Šçš„ç‰Œ
         self._pokers = [Poker(self, i) for i in range(52)] + \
                        [Poker(self, 52) for _ in range(52)]
 
         points = [(240, 612, 371.5, 520), (4, 100, 100, 306.5),
-                  (240, 4, 371.5, 93), (739, 100, 643, 306.5)]  # Íæ¼ÒÊÖÅÆ·ÅÖÃÎ»ÖÃ
-        self.players = [QPlayer(i, *(points[i])) for i in range(4)]  # ½çÃæÖĞÍæ¼Ò²ÉÓÃÄæÊ±ÕëµÄË³ĞòÏÔÊ¾
+                  (240, 4, 371.5, 93), (739, 100, 643, 306.5)]  # ç©å®¶æ‰‹ç‰Œæ”¾ç½®ä½ç½®
+        self.players = [QPlayer(i, *(points[i])) for i in range(4)]  # ç•Œé¢ä¸­ç©å®¶é‡‡ç”¨é€†æ—¶é’ˆçš„é¡ºåºæ˜¾ç¤º
         ###################################################
 
         self.resize(800, 700)
@@ -229,26 +229,26 @@ class TimeBridgeGUI(QWidget):
         self.connect_with_controller()
 
     def connect_with_controller(self):
-        """½«controllerÄÚµÄview_update_signalÁ¬½ÓÖÁÁ½¸ö¸üĞÂº¯Êı"""
-        # ĞÅºÅµÄÁ¬½Ó
+        """å°†controllerå†…çš„view_update_signalè¿æ¥è‡³ä¸¤ä¸ªæ›´æ–°å‡½æ•°"""
+        # ä¿¡å·çš„è¿æ¥
         self.controller.view_update_signal.connect(self.update_players)
         self.controller.view_update_signal.connect(self.update)
         self.controller.output_signal.connect(self.pmLabel.setText)
 
     def get_poker(self, card):
         """
-        ¸ù¾İÊı×ÖĞÎÊ½µÄÅÆ£¬ÕÒµ½¶ÔÓ¦µÄÍ¼ÏñĞÎÊ½µÄÅÆ
-        :param card: ÅÆ, CardÀàĞÍ
+        æ ¹æ®æ•°å­—å½¢å¼çš„ç‰Œï¼Œæ‰¾åˆ°å¯¹åº”çš„å›¾åƒå½¢å¼çš„ç‰Œ
+        :param card: ç‰Œ, Cardç±»å‹
         :return:
         """
-        # ×¢Òâ²ÎÊıºÍ·µ»ØÖµ¶¼¿ÉÄÜÊÇNone
+        # æ³¨æ„å‚æ•°å’Œè¿”å›å€¼éƒ½å¯èƒ½æ˜¯None
         if card is None:
             return None
         return self._pokers[card]
 
     def update_players(self):
         """
-        ¸üĞÂÍæ¼ÒÊÖÅÆµÄÏÔÊ¾
+        æ›´æ–°ç©å®¶æ‰‹ç‰Œçš„æ˜¾ç¤º
         :return:
         """
         for i, player in enumerate(self.players):
@@ -264,11 +264,11 @@ class TimeBridgeGUI(QWidget):
     ##################################################################################
 
     def mousePressEvent(self, e):
-        # TODO: ÔÚÖ®ºóµÄ°æ±¾ÖĞ£¬ÏÂÃæµÄprintº¯Êı¿ÉÉ¾³ı
+        # TODO: åœ¨ä¹‹åçš„ç‰ˆæœ¬ä¸­ï¼Œä¸‹é¢çš„printå‡½æ•°å¯åˆ é™¤
         print(e.x(), e.y())
 
         if 200 <= e.x() <= 600 and 180 <= e.y() <= 520:
-            # ½ĞÅÆÇøÓò
+            # å«ç‰ŒåŒºåŸŸ
             x = int((e.x() - 200) / 80)
             y = int((e.y() - 180) / 48)
             text = "x: {0},  y: {1}".format(x, y)
@@ -278,20 +278,20 @@ class TimeBridgeGUI(QWidget):
                 bid_result = y + 1, x
                 self.controller.send(bid_result, DateInfo.Bid)
 
-        # ÊÖÅÆÇø
+        # æ‰‹ç‰ŒåŒº
         if self.players[0].bpy <= e.y() <= self.players[0].bpy + 87:
-            # ÈËÀàÊÖÅÆÇø
+            # äººç±»æ‰‹ç‰ŒåŒº
             player = self.players[0]
             info = DateInfo.HumanPlay
         elif self.players[2].bpy <= e.y() <= self.players[2].bpy + 87:
-            # AI2 ÊÖÅÆÇø
+            # AI2 æ‰‹ç‰ŒåŒº
             player = self.players[2]
             info = DateInfo.AIPlay
         else:
             return
 
         if len(player.hand_pokers) > 0 and (player.bpx <= e.x() <= player.bpx + (len(player.hand_pokers) - 1) * player.interval + 57):
-            # ¼ÆËãÑ¡ÖĞÅÆµÄÏÂ±ê
+            # è®¡ç®—é€‰ä¸­ç‰Œçš„ä¸‹æ ‡
             clicklength = e.x() - player.bpx
             if clicklength <= player.interval * len(player.hand_pokers):
                 card_index = clicklength // player.interval
@@ -314,8 +314,8 @@ class TimeBridgeGUI(QWidget):
             self.draw_play_table(qp)
             # print('play draw')
         # elif self.controller.state == State.BidEnd:
-        #     #Ä¿Ç°´æÔÚBug
-        #     #ÓĞÊ±ºòÕâÀïµÄ´úÂëÃ»±»È«²¿µ÷ÓÃ
+        #     #ç›®å‰å­˜åœ¨Bug
+        #     #æœ‰æ—¶å€™è¿™é‡Œçš„ä»£ç æ²¡è¢«å…¨éƒ¨è°ƒç”¨
         #     self.label0.deleteLater()
         #     self.label1.deleteLater()
         #     self.label3.deleteLater()
@@ -334,40 +334,40 @@ class TimeBridgeGUI(QWidget):
 
 
     def draw_bid_area(self, qp):
-        #½ĞÅÆÇøÓò
+        #å«ç‰ŒåŒºåŸŸ
         pen = QPen(Qt.black, 1, Qt.SolidLine)
         qp.setPen(pen)
 
-        # ºáÏßÖ®¼ä¼ä¸ô48, ÊúÏßÖ®¼ä¼ä¸ô80
+        # æ¨ªçº¿ä¹‹é—´é—´éš”48, ç«–çº¿ä¹‹é—´é—´éš”80
         delta_x, delta_y = 80, 48
-        # »­ºáÏß
+        # ç”»æ¨ªçº¿
         for i in range(0, 8):
             qp.drawLine(200, 180 + i * delta_y, 600, 180 + i * delta_y)
-        # »­ÊúÏß
+        # ç”»ç«–çº¿
         for i in range(0, 6):
             qp.drawLine(200 + i * delta_x, 180, 200 + i * delta_x, 516)
 
     def draw_bid_text(self, qp):
-        colorList = ['?', '?', '?', '?', 'NT']
+        colorList = ['â™£', 'â™¦', 'â™¥', 'â™ ', 'NT']
         qp.setPen(QColor(71, 53, 135))
         qp.setFont(QFont('', 20))
         for x in range(0, 5):
             for y in range(1, 8):
                 text = '{0} {1}'.format(y, colorList[x])
                 qp.drawText(223 + 80 * x, 162 + 48 * y, text)
-        #×óÉÏ½ÇÌáÊ¾Çø¸üĞÂ
+        #å·¦ä¸Šè§’æç¤ºåŒºæ›´æ–°
         cp = self.controller.current_player_position
         if cp is None:
             return
 
-        # ÏÂÃæµÄ´úÂëÎÒ×¢ÊÍµôÁË£¬
-        # ÔÚ½çÃæÏÔÊ¾ÂÖµ½Ë­³öÅÆ¡¢½ĞÅÆÊÇÓÉController¾ö¶¨
-        # controllerÓĞÒ»¸öĞÅºÅoutput_signal£¬±»Á¬½Óµ½pmLabelµÄsetTextº¯Êı
-        # pmLabel´òËã¸øControllerÊä³öĞÅÏ¢ÓÃ£¬µ±È»GUIÈç¹ûÓĞÄ³Ğ©ĞÅÏ¢Ò²¿ÉÒÔÓÃËüÊä³ö£¬
-        # µ«ÂÖµ½Ë­½ĞÅÆ¡¢ÂÖµ½Ë­³öÅÆ£¬»¹ÊÇÓÉController¾ö¶¨
-        # self.pmText = 'ÂÖµ½{0}½ĞÅÆ'.format(cp)
+        # ä¸‹é¢çš„ä»£ç æˆ‘æ³¨é‡Šæ‰äº†ï¼Œ
+        # åœ¨ç•Œé¢æ˜¾ç¤ºè½®åˆ°è°å‡ºç‰Œã€å«ç‰Œæ˜¯ç”±Controllerå†³å®š
+        # controlleræœ‰ä¸€ä¸ªä¿¡å·output_signalï¼Œè¢«è¿æ¥åˆ°pmLabelçš„setTextå‡½æ•°
+        # pmLabelæ‰“ç®—ç»™Controllerè¾“å‡ºä¿¡æ¯ç”¨ï¼Œå½“ç„¶GUIå¦‚æœæœ‰æŸäº›ä¿¡æ¯ä¹Ÿå¯ä»¥ç”¨å®ƒè¾“å‡ºï¼Œ
+        # ä½†è½®åˆ°è°å«ç‰Œã€è½®åˆ°è°å‡ºç‰Œï¼Œè¿˜æ˜¯ç”±Controllerå†³å®š
+        # self.pmText = 'è½®åˆ°{0}å«ç‰Œ'.format(cp)
         # self.pmLabel.setText(self.pmText)
-        #Íæ¼Ò½ĞÅÆÌáÊ¾ĞÅÏ¢¸üĞÂ
+        #ç©å®¶å«ç‰Œæç¤ºä¿¡æ¯æ›´æ–°
 
         text = self.controller.get_bid_result(cp)
         if cp == 0:
@@ -380,7 +380,7 @@ class TimeBridgeGUI(QWidget):
             self.label3.setText(text)
 
     def bid_map(self, x, y):
-        # ½«½ĞÅÆÇø¸ñÎ»Ó³Éäµ½×ø±ê
+        # å°†å«ç‰ŒåŒºæ ¼ä½æ˜ å°„åˆ°åæ ‡
         return 80 * x + 200, 48 * y + 180, 80, 48
 
     def draw_bid_update(self, qp):
@@ -394,10 +394,10 @@ class TimeBridgeGUI(QWidget):
         xb = self.controller.max_bid[1]
         if self.controller.win_bid_position is None:
             return
-        #½ĞÅÆ±í¸üĞÂ
-        qp.setBrush(QColor(self.controller.win_bid_position * 20, 100 + self.controller.win_bid_position * 10, 230 - self.controller.win_bid_position * 15))#Æ¤ÕâÒ»ÏÂ¾ÍºÜ¿ªĞÄ
+        #å«ç‰Œè¡¨æ›´æ–°
+        qp.setBrush(QColor(self.controller.win_bid_position * 20, 100 + self.controller.win_bid_position * 10, 230 - self.controller.win_bid_position * 15))#çš®è¿™ä¸€ä¸‹å°±å¾ˆå¼€å¿ƒ
         qp.drawRect(*self.bid_map(xb, yb))
-        qp.setBrush(QColor(200, 200, 200))#°ÑÊ§Ğ§ÇøÓòÍ¿»Ò
+        qp.setBrush(QColor(200, 200, 200))#æŠŠå¤±æ•ˆåŒºåŸŸæ¶‚ç°
         for y in range(0, 7):
             for x in range(0, 5):
                 if y < yb or (y == yb and x < xb):
@@ -406,11 +406,11 @@ class TimeBridgeGUI(QWidget):
                     return
 
     def draw_play_table(self, qp):
-        """¸üĞÂ³öÅÆ±í"""
+        """æ›´æ–°å‡ºç‰Œè¡¨"""
         play_table = self.controller.play_table
-        rank = [2, 3, 0, 1, 'win']
+        rank = [0, 1, 2, 3, 'win']
         player_name = ['S', 'E', 'N', 'W']
-        color_list = ['?', '?', '?', '?']
+        color_list = ['â™£', 'â™¦', 'â™¥', 'â™ ']
         poker_list = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q',
                       'K', 'A']
         for y in range(1, len(play_table) + 1):
@@ -446,18 +446,18 @@ class TimeBridgeGUI(QWidget):
 
     def draw_play_text(self, qp):
         player_list = ['N', 'W', 'S', 'E']
-        color_list = ['?', '?', '?', '?', 'NT']
+        color_list = ['â™£', 'â™¦', 'â™¥', 'â™ ', 'NT']
         if self.controller.win_bid_position is not None:
-            contract = 'ÆõÔ¼:{0}ÓÉ{1}½Ğ³ö'.format(str(self.controller.max_bid[0]) + color_list[self.controller.max_bid[1]], player_list[self.controller.win_bid_position])
+            contract = 'å¥‘çº¦:{0}ç”±{1}å«å‡º'.format(str(self.controller.max_bid[0]) + color_list[self.controller.max_bid[1]], player_list[self.controller.win_bid_position])
         qp.drawText(355, 193, contract)
-        text_list = ['ÂÖ´Î', 'N³öÅÆ', 'W³öÅÆ', 'S³öÅÆ', 'E³öÅÆ', '»ñÊ¤·½']
+        text_list = ['è½®æ¬¡', 'Nå‡ºç‰Œ', 'Wå‡ºç‰Œ', 'Så‡ºç‰Œ', 'Eå‡ºç‰Œ', 'è·èƒœæ–¹']
         for x in range(0, 6):
             qp.drawText(50 * x + 230, 215, text_list[x])
         for y in range(1, 14):
             qp.drawText(246.5, 20 * y + 215, str(y))
-            qp.drawText(535, 20 * y + 215, '»ØËİ')
-        qp.drawText(232, 495, '×ÜÊ¤³¡')
-        qp.drawText(237, 515, '×Ü·Ö')
+            qp.drawText(535, 20 * y + 215, 'å›æº¯')
+        qp.drawText(232, 495, 'æ€»èƒœåœº')
+        qp.drawText(237, 515, 'æ€»åˆ†')
 
 
 class MainWindow(QMainWindow):
@@ -465,33 +465,33 @@ class MainWindow(QMainWindow):
 
     def __init__(self):
         super().__init__()
-        self.setWindowTitle('Ê±¹âÇÅÅÆ')
+        self.setWindowTitle('æ—¶å…‰æ¡¥ç‰Œ')
         self.setWindowIcon(QIcon('time.png'))
         self.controller = Controller()
         widget = TimeBridgeGUI(self, controller=self.controller)
         self.setCentralWidget(widget)
         # self.show()
 
-        # ²Ëµ¥Ïî
-        # TODO: Ìí¼ÓÆäËûµÄ²Ëµ¥Ïî
+        # èœå•é¡¹
+        # TODO: æ·»åŠ å…¶ä»–çš„èœå•é¡¹
         self.bar = self.menuBar()
 
-        self.item = self.bar.addMenu('Ñ¡Ïî')
-        self.new_game = QAction(self, text='ĞÂÓÎÏ·')
+        self.item = self.bar.addMenu('é€‰é¡¹')
+        self.new_game = QAction(self, text='æ–°æ¸¸æˆ')
         self.item.addAction(self.new_game)
 
         self.connect_with_controller()
 
     def connect_with_controller(self):
         """
-        ½«²Ëµ¥ÏîÓëcontrollerÖĞµÄ²Ûº¯ÊıÁ¬½ÓÆğÀ´
+        å°†èœå•é¡¹ä¸controllerä¸­çš„æ§½å‡½æ•°è¿æ¥èµ·æ¥
         :return:
         """
         self.new_game.triggered.connect(self.controller.new_game)
 
     def closeEvent(self, event):
-        #ÊÇ·ñÈ·ÈÏÍË³ö
-        reply = QMessageBox.question(self, 'Message', "ÊÇ·ñÈ·ÈÏÍË³ö?",
+        #æ˜¯å¦ç¡®è®¤é€€å‡º
+        reply = QMessageBox.question(self, 'Message', "æ˜¯å¦ç¡®è®¤é€€å‡º?",
                                      QMessageBox.Yes | QMessageBox.No,
                                      QMessageBox.No)
         if reply == QMessageBox.Yes:
